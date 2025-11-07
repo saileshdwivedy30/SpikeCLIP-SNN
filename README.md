@@ -15,7 +15,7 @@ This repository implements a **Spiking Neural Network (SNN)**-based version of S
 - Model: SNN-based Lightweight Reconstruction Network (LRN)
 - Framework: PyTorch with snnTorch library
 - Datasets: U-CIFAR and U-CALTECH (synthetic data generation supported)
-- Performance: 41.33% test accuracy, 12.21ms latency, 30.12W power consumption
+- Performance: 52.00% test accuracy, 12.21ms latency, 30.12W power consumption
 
 ## 🚀 Quick Start
 
@@ -212,20 +212,20 @@ See `DATASET_NOTE.md` and `DATA_COMPATIBILITY.md` for details.
 **Model**: SNN-based SpikeCLIP (Spiking Neural Network)
 
 **Classification Performance:**
-- **Test Accuracy**: 41.33% (on 300 test samples, 10 classes)
-- **Validation Accuracy**: 47.50% (best epoch: 27)
+- **Test Accuracy**: 52.00% (on 300 test samples, 10 classes)
+- **Validation Accuracy**: 59.00% (best epoch: 41)
 
 
 **Image Quality Metrics:**
-- **NIQE**: 16.98 (lower is better)
-- **BRISQUE**: 68.05 (lower is better)
-- **PIQE**: 65.60 (lower is better)
+- **NIQE**: 20.03 (lower is better)
+- **BRISQUE**: 59.72 (lower is better)
+- **PIQE**: 65.83 (lower is better)
 
 **Training Configuration:**
 - Dataset: U-CIFAR (150 samples/class, 1500 total training samples)
-- Epochs: 27 (early stopping)
+- Epochs: 41 (early stopping)
 - Batch Size: 4
-- Loss Weights: clip_weight=0.5, recon_weight=1.5, prompt_weight=0.75
+- Loss Weights: clip_weight=0.75, recon_weight=1.5, prompt_weight=0.75
 - Model: Spiking Neural Network
 
 ### Performance Benchmarks (GPU - NVIDIA T4)
