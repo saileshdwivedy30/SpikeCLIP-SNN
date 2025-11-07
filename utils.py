@@ -249,7 +249,6 @@ def SpikeToRaw(save_path, SpikeSeq, filpud=True, delete_if_exists=True):
         save spike sequence to .dat file
         save_path: full saving path (string)
         SpikeSeq: Numpy array (T x H x W)
-        Rui Zhao
     """
     if delete_if_exists:
         if os.path.exists(save_path):
@@ -262,11 +261,9 @@ def SpikeToRaw(save_path, SpikeSeq, filpud=True, delete_if_exists=True):
     fid = open(save_path, 'ab')
     for img_id in range(sfn):
         if filpud:
-            # 模拟相机的倒像
             spike = np.flipud(SpikeSeq[img_id, :, :])
         else:
             spike = SpikeSeq[img_id, :, :]
-        # numpy按自动按行排，数据也是按行存的
         # spike = spike.flatten()
         if remainder == 0:
             spike = spike.flatten()
