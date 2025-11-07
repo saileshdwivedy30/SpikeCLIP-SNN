@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data
+data/
+*.npz
+*.dat
+*.npy
+
+# Models and checkpoints
+models/*.pth
+checkpoints/
+exp/
+*.pt
+*.pth.tar
+
+# CLIP models
+clip_model/
+
+# Outputs
+test_outputs/
+*.png
+*.jpg
+*.gif
+*.mp4
+Video/
+
+# Logs
+*.log
+*.txt
+!requirements.txt
+
+# Results tracking
+experiment_results.json
+
+# TensorBoard
+tensorboard/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Backup folders
+backup*/
+backup_*/
+convert_env/
+
