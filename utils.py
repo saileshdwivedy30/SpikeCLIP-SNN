@@ -110,22 +110,6 @@ def save_opt(opt,opt_path):
         for key, value in vars(opt).items():
             f.write(f"{key}: {value}\n")
 
-def save_gif(image_list, gif_path = 'test', duration = 2,RGB = True,nor = False):
-    imgs = []
-    with imageio.get_writer(os.path.join(gif_path + '.gif'), mode='I',duration = 1000 * duration / len(image_list),loop=0) as writer:
-        for i in range(len(image_list)):
-            img = normal_img(image_list[i],RGB,nor)
-            writer.append_data(img)
-
-def save_video(image_list,path = 'test',duration = 2,RGB = True,nor = False):
-    os.makedirs('Video',exist_ok = True)
-    imgs = []
-    for i in range(len(image_list)):
-        img = normal_img(image_list[i],RGB,nor)
-        imgs.append(img)
-    imageio.mimwrite(os.path.join('Video',path + '.mp4'), imgs, fps=30, quality=8)
-
-
 def normal_img(img,RGB = True,nor = True):
     if nor:
         img = 255 * ((img - img.min()) / (img.max() - img.min()))
@@ -171,49 +155,6 @@ class AverageMeter(object):
         self.sum += val * n
         self.avg = self.sum / self.count
 
-
-def load_vidar_dat(filename, height = 250, width = 400):
-    left_up=(0, 0)
-    frame_cnt = None
-    if isinstance(filename, str):
-        array = np.fromfile(filename, dtype=np.uint8)
-    elif isinstance(filename, (list, tuple)):
-        l = []
-        for name in filename:
-            a = np.fromfile(name, dtype=np.uint8)
-            l.append(a)
-        array = np.concatenate(l)
-    else:
-        raise NotImplementedError
-
-    window = (height - left_up[0], width - left_up[0])
-
-    len_per_frame = height * width // 8
-    framecnt = frame_cnt if frame_cnt != None else len(array) // len_per_frame
-
-    spikes = []
-
-    for i in range(framecnt):
-        compr_frame = array[i * len_per_frame: (i + 1) * len_per_frame]
-        blist = []
-        for b in range(8):
-            blist.append(np.right_shift(np.bitwise_and(compr_frame, np.left_shift(1, b)), b))
-        
-        frame_ = np.stack(blist).transpose()
-        frame_ = np.flipud(frame_.reshape((height, width), order='C'))
-
-        if window is not None:
-            spk = frame_[left_up[0]:left_up[0] + window[0], left_up[1]:left_up[1] + window[1]]
-        else:
-            spk = frame_
-
-        spk = spk.copy().astype(np.float32)[None]
-
-        spikes.append(spk)
-
-    return np.concatenate(spikes)
-
-
 import logging
 # log info
 def setup_logging(log_file):
@@ -242,37 +183,3 @@ def generate_labels(file_name):
     num = int(num_part)
     labels = [non_num_part + str(num + 2 * i).zfill(len(num_part)) + '.png' for i in range(-3, 4)]
     return labels
-
-
-def SpikeToRaw(save_path, SpikeSeq, filpud=True, delete_if_exists=True):
-    """
-        save spike sequence to .dat file
-        save_path: full saving path (string)
-        SpikeSeq: Numpy array (T x H x W)
-    """
-    if delete_if_exists:
-        if os.path.exists(save_path):
-            os.remove(save_path)
-
-    sfn, h, w = SpikeSeq.shape
-    remainder = int((h * w) % 8)
-    # assert (h * w) % 8 == 0
-    base = np.power(2, np.linspace(0, 7, 8))
-    fid = open(save_path, 'ab')
-    for img_id in range(sfn):
-        if filpud:
-            spike = np.flipud(SpikeSeq[img_id, :, :])
-        else:
-            spike = SpikeSeq[img_id, :, :]
-        # spike = spike.flatten()
-        if remainder == 0:
-            spike = spike.flatten()
-        else:
-            spike = np.concatenate([spike.flatten(), np.array([0]*(8-remainder))])
-        spike = spike.reshape([int(h*w/8), 8])
-        data = spike * base
-        data = np.sum(data, axis=1).astype(np.uint8)
-        fid.write(data.tobytes())
-    fid.close()
-    return
-
