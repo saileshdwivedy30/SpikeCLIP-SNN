@@ -2,107 +2,12 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
-def conv_layer(inDim, outDim, ks, s, p, norm_layer='none'):
-    ## convolutional layer
-    conv = nn.Conv2d(inDim, outDim, kernel_size=ks, stride=s, padding=p)
-    relu = nn.ReLU(True)
-    assert norm_layer in ('batch', 'instance', 'none')
-    if norm_layer == 'none':
-        seq = nn.Sequential(*[conv, relu])
-    else:
-        if (norm_layer == 'instance'):
-            norm = nn.InstanceNorm2d(outDim, affine=False, track_running_stats=False) # instance norm
-        else:
-            momentum = 0.1
-            norm = nn.BatchNorm2d(outDim, momentum = momentum, affine=True, track_running_stats=True)
-        seq = nn.Sequential(*[conv, norm, relu])
-    return seq
-
-def LRN(inDim=50, outDim=1, norm='none'):  
-    convBlock1 = conv_layer(inDim,64,3,1,1)
-    convBlock2 = conv_layer(64,128,3,1,1,norm)
-    convBlock3 = conv_layer(128,64,3,1,1,norm)
-    convBlock4 = conv_layer(64,16,3,1,1,norm)
-    conv = nn.Conv2d(16, outDim, 3, 1, 1) 
-    seq = nn.Sequential(*[convBlock1, convBlock2, convBlock3, convBlock4, conv])
-    return seq
-
-# ============================================================================
-# SNN (Spiking Neural Network) Version
-# ============================================================================
-
-def SNN_LRN(inDim=50, outDim=1, num_steps=50, beta=0.9, threshold=1.0, norm='none'):
-    """
-    Spiking Neural Network version of LRN.
-    
-    Args:
-        inDim: Input channels (default: 50 for voxelized spike data)
-        outDim: Output channels (default: 1 for grayscale image)
-        num_steps: Number of time steps for SNN simulation (default: 50)
-        beta: Leak parameter for LIF neuron (default: 0.9)
-        threshold: Spike threshold (default: 1.0)
-        norm: Normalization type ('batch', 'instance', 'none')
-    
-    Returns:
-        SNN model that processes spike tensors and outputs coarse images
-    """
-    try:
-        import snntorch as snn
-    except ImportError:
-        raise ImportError(
-            "snnTorch is required for SNN model. Install with: pip install snnTorch"
-        )
-    
-    # SNN layers with Leaky Integrate-and-Fire (LIF) neurons
-    layers = []
-    
-    # Layer 1: Conv + SNN neuron
-    layers.append(nn.Conv2d(inDim, 64, kernel_size=3, stride=1, padding=1))
-    if norm == 'batch':
-        layers.append(nn.BatchNorm2d(64))
-    elif norm == 'instance':
-        layers.append(nn.InstanceNorm2d(64, affine=False, track_running_stats=False))
-    layers.append(snn.Leaky(beta=beta, threshold=threshold, init_hidden=True))
-    
-    # Layer 2: Conv + SNN neuron
-    layers.append(nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1))
-    if norm in ('batch', 'instance'):
-        if norm == 'batch':
-            layers.append(nn.BatchNorm2d(128))
-        else:
-            layers.append(nn.InstanceNorm2d(128, affine=False, track_running_stats=False))
-    layers.append(snn.Leaky(beta=beta, threshold=threshold, init_hidden=True))
-    
-    # Layer 3: Conv + SNN neuron
-    layers.append(nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1))
-    if norm in ('batch', 'instance'):
-        if norm == 'batch':
-            layers.append(nn.BatchNorm2d(64))
-        else:
-            layers.append(nn.InstanceNorm2d(64, affine=False, track_running_stats=False))
-    layers.append(snn.Leaky(beta=beta, threshold=threshold, init_hidden=True))
-    
-    # Layer 4: Conv + SNN neuron
-    layers.append(nn.Conv2d(64, 16, kernel_size=3, stride=1, padding=1))
-    if norm in ('batch', 'instance'):
-        if norm == 'batch':
-            layers.append(nn.BatchNorm2d(16))
-        else:
-            layers.append(nn.InstanceNorm2d(16, affine=False, track_running_stats=False))
-    layers.append(snn.Leaky(beta=beta, threshold=threshold, init_hidden=True))
-    
-    # Final layer: Conv (no spiking, outputs analog values)
-    layers.append(nn.Conv2d(16, outDim, kernel_size=3, stride=1, padding=1))
-    
-    return nn.Sequential(*layers)
-
-
 class SNN_LRN_Wrapper(nn.Module):
     """
     Wrapper for SNN_LRN that handles temporal simulation.
     Processes spike tensors through SNN and outputs coarse images.
     
-    This is a runnable SNN model that:
+    This SNN model:
     - Takes spike tensors as input (voxelized: [B, 50, 224, 224])
     - Processes through spiking neurons (Leaky Integrate-and-Fire)
     - Outputs coarse images ([B, 1, 224, 224])
@@ -249,17 +154,3 @@ class SNN_LRN_Wrapper(nn.Module):
         output = self.conv_final(spk4)  # [B, outDim, H, W]
         
         return output
-
-    
-from thop import profile
-if __name__ == "__main__":
-    net = LRN()
-    total = sum(p.numel() for p in net.parameters())
-    spike = torch.zeros((1,50,250,400))
-    flops, _ = profile((net), inputs=(spike,))
-    re_msg = (
-        "Total params: %.4fM" % (total / 1e6),
-        "FLOPs=" + str(flops / 1e9) + '{}'.format("G"),
-    )    
-    print(re_msg)
-
