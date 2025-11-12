@@ -218,8 +218,6 @@ See `DATASET_NOTE.md` and `DATA_COMPATIBILITY.md` for details.
 
 **Image Quality Metrics:**
 - **NIQE**: 20.03 (lower is better)
-- **BRISQUE**: 59.72 (lower is better)
-- **PIQE**: 65.83 (lower is better)
 
 **Training Configuration:**
 - Dataset: U-CIFAR (150 samples/class, 1500 total training samples)
